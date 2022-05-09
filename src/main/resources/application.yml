@@ -1,19 +1,17 @@
+spring.application.name: api-gateway
+spring.config.import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
 spring:
-  application:
-    name: API-GATEWAY
   cloud:
     gateway:
       routes:
-        - id: ECARE-APPOINTMENT-SERVICE
-          uri: lb://ECARE-APPOINTMENT-SERVICE
+        - id: ecare-appointment-service
+          uri: lb://ecare-appointment-service
           predicates:
-            - Path=/api/home/**
+            - Path=/api/ecare/**
     discovery:
       enabled: true
     config:
       uri: http://localhost:8080
-server:
-  port: 8080
 eureka:
   client:
     service-url:
