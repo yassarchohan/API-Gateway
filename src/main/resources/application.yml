@@ -20,3 +20,7 @@ eureka:
     fetch-registry: true
   instance:
     hostname: localhost
+
+
+jwt:
+  secret: secretkey
