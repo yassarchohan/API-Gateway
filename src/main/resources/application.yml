@@ -1,26 +1,43 @@
 spring.application.name: api-gateway
-spring.config.import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
+#spring.config.import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
+#spring.cloud.config.uri: http://localhost:8888/
 spring:
   cloud:
     gateway:
       routes:
         - id: ecare-appointment-service
-          uri: lb://ecare-appointment-service
+          uri: http://ecare-appointment-service:6001
           predicates:
             - Path=/api/ecare/**
+        - id: auth-service
+          uri: http://auth-service:6000
+          predicates:
+            - Path=/auth/**
     discovery:
       enabled: true
     config:
-      uri: http://localhost:8080
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    hostname: localhost
+      uri: http://config-server:8080
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka/
+#    register-with-eureka: true
+#    fetch-registry: true
+#  instance:
+#    hostname: localhost
 
 
 jwt:
   secret: secretkey
+
+#for docker container
+spring.cloud.config.uri: http://config-server:8888/
+spring.config.import: configserver:http://config-server:8888
+eureka:
+  client:
+    service-url:
+      defaultZone: http://discovery-server:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    hostname: discovery-server
