@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -27,7 +28,9 @@ public class JwtAuthenticationFilter implements GatewayFilter {
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
 		ServerHttpRequest request = (ServerHttpRequest) exchange.getRequest();
 
-		final List<String> apiEndpoints = List.of("/register", "/login");
+		final List<String> apiEndpoints = new ArrayList<>();
+		apiEndpoints.add("/register");
+		apiEndpoints.add("/login");
 
 		Predicate<ServerHttpRequest> isApiSecured = r -> apiEndpoints.stream()
 				.noneMatch(uri -> r.getURI().getPath().contains(uri));
