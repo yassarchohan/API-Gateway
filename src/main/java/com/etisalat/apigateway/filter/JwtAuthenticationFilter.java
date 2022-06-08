@@ -2,6 +2,7 @@ package com.etisalat.apigateway.filter;
 
 import com.etisalat.apigateway.exception.JwtTokenMalformedException;
 import com.etisalat.apigateway.exception.JwtTokenMissingException;
+import com.etisalat.apigateway.service.LoginService;
 import com.etisalat.apigateway.util.JwtUtil;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,9 @@ public class JwtAuthenticationFilter implements GatewayFilter {
 
 	@Autowired
 	private JwtUtil jwtUtil;
+
+	@Autowired
+	private LoginService loginService;
 
 	@Override
 	public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -46,20 +50,16 @@ public class JwtAuthenticationFilter implements GatewayFilter {
 			final String token = request.getHeaders().getOrEmpty("Authorization").get(0);
 
 			try {
-				jwtUtil.validateToken(token);
+				if (token.equalsIgnoreCase("")) {
+					throw new JwtTokenMissingException("JWT token is missing");
+				}
+				loginService.validateWsoToken(token);
 			} catch (JwtTokenMalformedException | JwtTokenMissingException e) {
-				// e.printStackTrace();
-
 				ServerHttpResponse response = exchange.getResponse();
 				response.setStatusCode(HttpStatus.BAD_REQUEST);
-
 				return response.setComplete();
 			}
-
-
-			exchange.getRequest().mutate().header("id", String.valueOf(jwtUtil.getClaims(token).get("id"))).build();
 		}
-
 		return chain.filter(exchange);
 	}
 
