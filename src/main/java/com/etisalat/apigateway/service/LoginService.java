@@ -21,21 +21,26 @@ import org.springframework.beans.factory.ObjectFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.http.HttpMessageConverters;
-import org.springframework.cloud.openfeign.support.SpringDecoder;
 import org.springframework.cloud.openfeign.support.SpringEncoder;
-import org.springframework.http.codec.json.Jackson2JsonEncoder;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ServerWebExchange;
-import org.springframework.web.server.adapter.DefaultServerWebExchange;
-
-import java.util.concurrent.ExecutionException;
 
 @Service
 @Slf4j
 public class LoginService {
 
     private WsoClient wsoClient;
+
+    @Value("${client.client-id}")
+    private String clientId;
+
+    @Value("${client.client-secret}")
+    private String clientSecret;
+
+    @Value("${provider.host}")
+    private String url;
+
+    @Value("${client.grant-type}")
+    private String grantType;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -46,8 +51,8 @@ public class LoginService {
     public LoginResDto authenticateUser(LoginDto loginDto) {
         try {
             this.wsoClient = Feign.builder().encoder(new SpringFormEncoder(new SpringEncoder(messageConverters))).decoder(new GsonDecoder()).logger(new Slf4jLogger(LoginService.class)).
-                    requestInterceptor(new BasicAuthRequestInterceptor("ephI80bgH88cCS0nAdUEexTZgaIa", "9yWBvSfhvtWalnrT55QvGVyOe8Ia")).target(WsoClient.class, "https://localhost:9443");
-            LoginResDto loginResDto = wsoClient.authenticate("password", loginDto.getUsername(), loginDto.getPassword());
+                    requestInterceptor(new BasicAuthRequestInterceptor(clientId, clientSecret)).target(WsoClient.class, url);
+            LoginResDto loginResDto = wsoClient.authenticate(grantType, loginDto.getUsername(), loginDto.getPassword());
             log.info("login response: " + loginResDto);
             return loginResDto;
         }
@@ -61,7 +66,7 @@ public class LoginService {
         try {
             log.info("the token is: " + token);
             this.wsoClient = Feign.builder().encoder(new SpringFormEncoder(new SpringEncoder(messageConverters))).decoder(new GsonDecoder()).logger(new Slf4jLogger(LoginService.class)).
-                    requestInterceptor(new BasicAuthRequestInterceptor("admin", "admin")).target(WsoClient.class, "https://localhost:9443");
+                    requestInterceptor(new BasicAuthRequestInterceptor("admin", "admin")).target(WsoClient.class, url);
             ValidateTokenDto response = wsoClient.validateToken(token);
             log.info("login response: " + response);
             if (response.getActive().equalsIgnoreCase("true")) {
@@ -79,7 +84,7 @@ public class LoginService {
     public void validateWsoToken(final String token) throws JwtTokenMalformedException, JwtTokenMissingException {
         log.info("the token is: " + token);
         this.wsoClient = Feign.builder().encoder(new SpringFormEncoder(new SpringEncoder(messageConverters))).decoder(new GsonDecoder()).logger(new Slf4jLogger(LoginService.class)).
-                requestInterceptor(new BasicAuthRequestInterceptor("admin", "admin")).target(WsoClient.class, "https://localhost:9443");
+                requestInterceptor(new BasicAuthRequestInterceptor("admin", "admin")).target(WsoClient.class, url);
         ValidateTokenDto response = wsoClient.validateToken(token);
         log.info("login response: " + response);
         if (response.getActive().equalsIgnoreCase("false")) {
